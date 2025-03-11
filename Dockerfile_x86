@@ -102,13 +102,19 @@ RUN mkdir -p /etc/nginx/ssl && \
     -out /etc/nginx/ssl/pusher.crt \
     -subj "/C=US/ST=State/L=City/O=Organization/CN=ws-mt1.pusher.com"
 
-# Clone the GitHub repository into /app/expensify
-# RUN mkdir -p -m 0700 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
+# 在克隆仓库后添加以下步骤
 RUN git clone https://github.com/Expensify/App.git /app/expensify --single-branch
 
-# Install NVM and Node.js
+# 预安装依赖
+WORKDIR /app/expensify
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash && \
-    . "$NVM_DIR/nvm.sh"
+    . "$NVM_DIR/nvm.sh" && \
+    nvm install && \
+    npm install --no-cache && \
+    python3.12 /app/expensify/npm_fix.py
+
+# 创建一个备份的node_modules目录
+RUN cp -r /app/expensify/node_modules /app/node_modules_backup
 
 # Install Pip
 COPY requirements.txt .

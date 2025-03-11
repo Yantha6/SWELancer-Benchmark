@@ -108,6 +108,7 @@
         EXPENSIFY_URL: "{{ lookup('env', 'EXPENSIFY_URL') }}"
         NEW_EXPENSIFY_URL: "{{ lookup('env', 'NEW_EXPENSIFY_URL') }}"
 
+    # 将删除node_modules的步骤替换为恢复备份
     - name: Remove node_modules folder
       file:
         path: /app/expensify/node_modules
@@ -135,18 +136,17 @@
         executable: /bin/bash
       when: git_tag.stdout != ''
     
-    # - name: Set npm registry to use the local npm proxy
-    #   shell: |
-    #     source /root/.nvm/nvm.sh
-    #     npm set registry http://npmcache:4873/
-    #   args:
-    #     chdir: /app/expensify
-    #     executable: /bin/bash
-
+    - name: Restore node_modules from backup
+      shell: |
+        cp -r /app/node_modules_backup /app/expensify/node_modules
+      args:
+        executable: /bin/bash
+    
+    # 修改npm install步骤，使用--prefer-offline选项
     - name: Install node modules via npm
       shell: |
         source /root/.nvm/nvm.sh
-        npm install --no-cache
+        npm install --prefer-offline
       args:
         chdir: /app/expensify
         executable: /bin/bash
